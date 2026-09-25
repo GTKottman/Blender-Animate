@@ -227,6 +227,31 @@ def analyze(values: Sequence[Sample], frame_start: float, frame_step: float, fps
                       "sine and power in-out easings (at rest, or at the midpoint for cubic/quart/quint "
                       "in-out); smootherstep keeps acceleration continuous and zero at rest." % ", ".join("%g" % frames[i] for i in kicks[:8]))
 
+    # Mid-move stops: speed falls to ~0 between two moving stretches.
+    stop_tol = 0.03 * peak_speed
+    stops: List[int] = []
+    i = a0 + 1
+    while i < a1:
+        if abs_speed[i] < stop_tol and any(s > 0.2 * peak_speed for s in abs_speed[a0:i]) \
+                and any(s > 0.2 * peak_speed for s in abs_speed[i:a1 + 1]):
+            j = i
+            while j + 1 < a1 and abs_speed[j + 1] < stop_tol:
+                j += 1
+            # A scalar channel that turns around (apex, spring overshoot) is reversing, not hitching.
+            before = next((speed[k] for k in range(i - 1, a0 - 1, -1) if abs_speed[k] >= stop_tol), 0.0)
+            after = next((speed[k] for k in range(j + 1, a1 + 1) if abs_speed[k] >= stop_tol), 0.0)
+            if not scalar or before * after > 0:
+                stops.append(min(range(i, j + 1), key=lambda k: abs_speed[k]))
+            i = j + 1
+        else:
+            i += 1
+    result["stops_at_frames"] = [frames[k] for k in stops]
+    if stops:
+        issues.append("Comes to rest mid-move at frame(s) %s. Right for a held pose; a hitch if the move "
+                      "should flow through. For flow, use easing 'auto' on those waypoints or pair an "
+                      "ease-in segment with an ease-out segment (e.g. cubic_in then cubic_out)."
+                      % ", ".join("%g" % frames[k] for k in stops[:8]))
+
     # Overshoot / oscillation (scalar channels).
     if scalar and abs(displacement[0]) > 1e-9:
         start, end = xs[0][0], xs[-1][0]
@@ -295,6 +320,8 @@ def _summary(r: Dict[str, Any]) -> str:
         parts.append("%.0f%% overshoot" % (r["overshoot"] * 100))
     if r.get("velocity_kinks_at_frames"):
         parts.append("%d velocity kink(s)" % len(r["velocity_kinks_at_frames"]))
+    if r.get("stops_at_frames"):
+        parts.append("%d mid-move stop(s)" % len(r["stops_at_frames"]))
     sm = r.get("smoothness_vs_min_jerk")
     if sm:
         parts.append("smoothness %.2f of minimum-jerk ideal" % sm)

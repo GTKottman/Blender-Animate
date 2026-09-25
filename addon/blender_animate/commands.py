@@ -256,7 +256,9 @@ def _quick_analysis(id_block, data_path, indices, is_array, f0, f1, angle_unit):
     """Short motion report attached to every write so the AI sees the result."""
     fps = _fps()
     step = 0.25 if (f1 - f0) <= 120 else (f1 - f0) / 480.0
-    lo, hi = f0, f1
+    # A few frames of margin show how the move leaves and meets the surrounding
+    # animation (or the hold before/after), where velocity kinks and kicks live.
+    lo, hi = f0 - 4.0, f1 + 4.0
     frames, cols = _sample_fcurves(id_block, data_path, indices, is_array, lo, hi, step)
     if _is_angle(data_path) and angle_unit == "degrees":
         cols = [[math.degrees(v) for v in col] for col in cols]
@@ -264,7 +266,8 @@ def _quick_analysis(id_block, data_path, indices, is_array, f0, f1, angle_unit):
     dt_step = (hi - lo) / (len(frames) - 1)
     r = mk_analysis.analyze(values, lo, dt_step, fps, label=data_path)
     keep = ("summary", "issues", "peak_velocity", "overshoot", "eases_in", "eases_out",
-            "velocity_kinks_at_frames", "smoothness_vs_min_jerk", "sparklines")
+            "velocity_kinks_at_frames", "acceleration_jumps_at_frames", "stops_at_frames",
+            "smoothness_vs_min_jerk", "sparklines")
     return {k: _round(_jsonable(r[k])) for k in keep if k in r}
 
 

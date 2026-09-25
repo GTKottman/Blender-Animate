@@ -66,6 +66,16 @@ Claude Desktop (`claude_desktop_config.json`):
 `BLENDER_HOST`, `BLENDER_PORT` (default `9877`) and `BLENDER_TIMEOUT` override the
 bridge address. Works with `mcp` 1.x (FastMCP) and 2.x (MCPServer).
 
+### 3. Skill (recommended)
+
+`skills/blender-animate/` is an Agent Skill that teaches Claude to use these tools the
+way an animator would. It covers timing choices, how to read the motion report, when a
+flagged issue is intended, and tested recipes (bouncing ball, anticipation → action →
+settle, flowing camera moves, path fly-throughs, overlap).
+
+- **Claude Code:** copy the folder to `~/.claude/skills/`.
+- **claude.ai / Claude Desktop:** upload the packaged `blender-animate.skill`.
+
 ## Tools
 
 | tool | what it does |

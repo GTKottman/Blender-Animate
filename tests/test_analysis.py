@@ -57,3 +57,15 @@ def test_sparkline():
     s = sparkline([0, 1, 2, 3, 4, 5, 6, 7])
     assert s == "▁▂▃▄▅▆▇█"
     assert len(sparkline(list(range(1000)), width=40)) == 40
+
+
+def test_mid_move_stop_vs_reversal():
+    sm = E.EASINGS["smootherstep"]
+    # two eased segments in the same direction: stops at the middle waypoint
+    vals = [5 * sm(i / 80) for i in range(81)] + [5 + 5 * sm(i / 80) for i in range(1, 81)]
+    r = analyze(vals, 0, 0.25, 24)
+    assert r["stops_at_frames"] == [pytest.approx(20)]
+    assert any("Comes to rest mid-move" in i for i in r["issues"])
+    # up then back down: a reversal, not a hitch
+    vals = [5 * sm(i / 80) for i in range(81)] + [5 - 5 * sm(i / 80) for i in range(1, 81)]
+    assert analyze(vals, 0, 0.25, 24)["stops_at_frames"] == []

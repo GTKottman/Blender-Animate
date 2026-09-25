@@ -49,6 +49,11 @@ animation tool also returns this report for what it just wrote, so check it.
 | hold or step (blocking) | `constant` |
 | smooth pass-through of many waypoints | `auto` |
 
+**Chaining trap:** a waypoint's easing sets the segment that *starts* there. If every
+segment eases in and out, the object stops at every waypoint. That's fine for holds,
+but it reads as a hitch in a flowing move. For flow, use `auto` on every waypoint, or
+`cubic_in` into `cubic_out`.
+
 Custom timing: `cubic_bezier(x1, y1, x2, y2)` works like CSS. Keep x1 and x2
 in [0, 1]. y values outside [0, 1] overshoot or anticipate.
 
