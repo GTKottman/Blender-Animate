@@ -1,0 +1,17 @@
+schema_version = "1.0.0"
+
+id = "blender_animate"
+version = "0.1.0"
+name = "Blender Animate MCP"
+tagline = "MCP bridge for AI-driven motion: easing, springs, paths and analysis"
+maintainer = "Blender-Animate contributors"
+type = "add-on"
+
+tags = ["Animation"]
+
+blender_version_min = "4.2.0"
+
+license = ["SPDX:GPL-3.0-or-later"]
+
+[permissions]
+network = "Local socket bridge so an MCP server can drive animation tools"

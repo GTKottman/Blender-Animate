@@ -1,0 +1,43 @@
+name: tests
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  maths-and-mcp:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - python: "3.10"
+            mcp: "mcp>=1.2,<2"
+          - python: "3.12"
+            mcp: "mcp>=2"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - run: pip install -e ".[dev]" "${{ matrix.mcp }}"
+      - run: pytest -q
+
+  blender:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        bpy: ["bpy>=4.2,<4.3", "bpy>=5.0,<5.1"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: sudo apt-get update && sudo apt-get install -y libxi6 libxxf86vm1 libxfixes3 libxrender1 libgl1 libsm6 libxkbcommon0
+      - run: pip install -e ".[dev]" "${{ matrix.bpy }}"
+      - run: pytest -q tests/test_blender_addon.py
+      - run: python scripts/build_addon.py
+      - uses: actions/upload-artifact@v4
+        if: matrix.bpy == 'bpy>=5.0,<5.1'
+        with:
+          name: blender_animate-addon
+          path: dist/blender_animate.zip
